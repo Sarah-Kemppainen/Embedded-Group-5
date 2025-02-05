@@ -1,0 +1,56 @@
+#define SWITCH_PIN 25
+void setup() {
+    PORTC_PCR5 = PORT_PCR_MUX(0x1);// Configure PTC5 as an output
+    PORTD_PCR5 = PORT_PCR_MUX(0x1);// Configure PTD5 as an output
+    PORTA_PCR5 = PORT_PCR_MUX(0x1);// Configure PTA5 as an output
+    PORTB_PCR11 = PORT_PCR_MUX(0x1);// Configure PTb11 as an output
+    PORTE_PCR25 = PORT_PCR_MUX(0x1);// Set PTE25 as GPIO output
+    // Configure the LED port as output
+    GPIOC_PDDR |= 0b100000;// PTC5
+    GPIOD_PDDR |= 0b100000;// PTD5
+    GPIOA_PDDR |= 0b100000;// PTA5
+    GPIOB_PDDR |= 0b100000000000;// PTB11
+    GPIOE_PDDR |= 0b10000000000000000000000000;
+
+   //GPIOE_PDDR &= ~(1 << SWITCH_PIN); // Set PTE25 as input
+
+}
+
+void loop() {
+ // Turn on LED.
+
+   
+    if (GPIOE_PDIR & 0b10000000000000000000000000) {
+        // Switch open
+        GPIOC_PDOR = 0x0;// Turn off LED PTC5
+        GPIOB_PDOR = 0x0;// Turn off LED at PTB11
+        GPIOA_PDOR = 0x0;// Turn off LED at PTA5
+        GPIOD_PDOR = 0x0;// Turn off LED at PTD5  
+
+    GPIOC_PDOR |= 0b100000; // Turn on LED at PTC5
+    delay(500);
+    GPIOC_PDOR ^= 0b100000;// Toggle LED at PTC5
+    delay(500);
+     GPIOB_PDOR |= 0b100000000000;//Turn on LED at PTB11
+    delay(500);
+    GPIOB_PDOR ^= 0b100000000000;// Toggle LED at PTB11
+    delay(500);
+     GPIOA_PDOR |= 0b100000;//Turn on LED at PTA5
+    delay(300);
+    GPIOA_PDOR ^= 0b100000;// Toggle LED at PTA5
+    delay(300);
+    GPIOD_PDOR |= 0b100000;//Turn on LED at PTD5
+    delay(300);
+    GPIOD_PDOR ^= 0b100000;// Toggle LED at PTD5
+    delay(300);
+    } else {
+        // Switch closed
+        GPIOC_PDOR |= 0b100000;// Turn on LED PTC5
+        GPIOA_PDOR |= 0b100000;// Turn on LED PTA5
+        GPIOB_PDOR |= 0b100000;// Turn on LED PTB11
+        GPIOD_PDOR |= 0b100000000000;// Turn on LED PTD5
+   
+
+    }
+   
+}
