@@ -28,18 +28,37 @@ void display_distance(float dist) {
   // Case 7: if dist = [0.6, 0.7) { grid = 00010 }
   // Case 8: if dist = [0.7, 0.8) { grid = 00001 }
 
+  float min_dist = 0.1;
+  float max_dist = 0.8;
+  float range = (max_dist - min_dist) / 9;
   String grid = "";
-  if ((dist >= 0.0) && (dist < 0.1)) { grid = "10000"; Serial.printf("grid set to 10000\n"); }
-  else if ((dist >= 0.1) && (dist < 0.2)) { grid = "11000"; Serial.printf("grid set to 11000\n"); }
-  else if ((dist >= 0.2) && (dist < 0.3)) { grid = "01000"; Serial.printf("grid set to 01000\n"); }
-  else if ((dist >= 0.3) && (dist < 0.4)) { grid = "01100"; Serial.printf("grid set to 01100\n"); }
-  else if ((dist >= 0.4) && (dist < 0.5)) { grid = "00100"; Serial.printf("grid set to 00100\n"); }
-  else if ((dist >= 0.5) && (dist < 0.6)) { grid = "00110"; Serial.printf("grid set to 00110\n"); }
-  else if ((dist >= 0.6) && (dist < 0.7)) { grid = "00010"; Serial.printf("grid set to 00010\n"); }
-  else if ((dist >= 0.7) && (dist < 0.8)) { grid = "00011"; Serial.printf("grid set to 00011\n"); }
-  else if (dist == 0.8) { grid = "00001"; Serial.printf("grid set to 00001\n"); }
-  else { Serial.printf("Distance not within range. No statement entered\n"); }
+  
+  const String states[] = {"10000", "11000", "01000", "01100", "00100", "00110", "00010", "00011", "00001"};
 
+  Serial.printf("min distance: %0.1f m; max distance: %0.1f m; dist range of each light state: %f\n", min_dist, max_dist, range);
+
+  for (int i = 0; i < 9; i++) {
+    float lower_bound = min_dist + (range * i);
+    float upper_bound = min_dist + (range * (i+1));
+
+    if (dist >= lower_bound && dist < upper_bound) { 
+      grid = states[i]; 
+      Serial.printf("range is [%1.2f, %1.2f)\n", lower_bound, upper_bound);
+      break;
+    }
+
+  }
+
+  if (dist == max_dist) {
+    grid = "00001";
+    Serial.printf("dist is 0.8 m\n");
+  }
+
+  if (grid.length() == 0) {
+    Serial.printf("Distance not within range. No statement entered\n");
+  }
+
+  Serial.printf("Grid: ");
   Serial.println(grid);
 
   // i = 0 ==> pin = 2
