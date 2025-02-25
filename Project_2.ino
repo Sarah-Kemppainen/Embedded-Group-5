@@ -47,7 +47,7 @@ void display_distance(float dist) {
 
   float min_dist = 0.1; // Minimum distance threshold
   float max_dist = 0.8; // Maximum distance threshold
-  float range = (max_dist - min_dist) / 9; // Calculate the range of each segment
+  float range = (max_dist - min_dist) / 8; // Calculate the range of each segment
   String grid = "";  // Initialize grid string to store LED states
 
 // Define possible states for reference
@@ -72,7 +72,7 @@ void display_distance(float dist) {
 
 // Special handling if distance is exactly the maximum
   if (dist == max_dist) {
-    grid = "00001";
+    grid = "00011";
     Serial.printf("dist is 0.8 m\n");
   }
 
