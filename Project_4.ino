@@ -3,6 +3,8 @@ int fsm_interval = 50;
 const int pmwPin1 = 18; 
 const int pmwPin2 = 15;
 
+#define SWITCH_PIN 31
+
 // NA1 = 13
 // NB1 = 39
 // NA2 = 36 
@@ -11,18 +13,31 @@ const int pmwPin2 = 15;
 
 const int duty = 64; // integer in the range [0, 255]
 
+// Set possible states
+enum {STATE_WAIT, STATE_LEFT25, STATE_RIGHT25, STATE_REAR25, STATE_ALL25, STATE_LEFT0, STATE_RIGHT0, STATE_REAR0, STATE_START};
+unsigned char state; 
+
+
 void setup() {
-  pinMode(pin, OUTPUT);
+  pinMode(pmwPin1, OUTPUT);
+  pinMode(pmwPin2, OUTPUT);
+
+  pinMode(SWITCH_PIN, INPUT);
   
 }
 
 void loop() {
-  if (current_time - last_fsm_time > fsm_interval) {
-    fsm_task();
-    last_fsm_time = current_time;
-  }
+  //if (current_time - last_fsm_time > fsm_interval) {
+  //  fsm_task();
+  //  last_fsm_time = current_time;
+  //}
 
-  analogWrite(pmwPin1, duty);
+  //analogWrite(pmwPin1, duty);
+
+  fsm_step();
+
+  // Switch Test
+
 }
 
 
@@ -71,80 +86,85 @@ void set_motors(float val[3]) {
   // ***** code here *****
   //
   //
-
-  set_motor(val[0]);
-  set_motor(val[1]);
-  set_motor(val[2]);
+  
+  set_motor(0, val[0]);
+  set_motor(1, val[1]);
+  set_motor(2, val[2]);
+  
 
 }
 
 void fsm_step() {
-  static State state = STATE_START;
+  //static State state = STATE_START;
 
-  // wait for the switch to be pressed
-  case STATE_WAIT:
-    // if switch is pressed, change state
-    // 
-    // ***** code here *****
-    //
+  switch (state) {
 
-    break;
-  
-  // ramp L motor to 25%
-  case STATE_LEFT25:
-    // 
-    // ***** code here *****
-    //
-    break;
+    // wait for the switch to be pressed
+    case STATE_WAIT:
+      // if switch is pressed, change state
+      // 
+      // ***** code here *****
+      //
 
-  // ramp R motor to 25%
-  case STATE_RIGHT25:
-    // 
-    // ***** code here *****
-    //
-    break;
+      break;
+    
+    // ramp L motor to 25%
+    case STATE_LEFT25:
+      // 
+      // ***** code here *****
+      //
+      break;
 
-  // ramp rear motor to 25%
-  case STATE_REAR25:
-    // 
-    // ***** code here *****
-    //
-    break;
+    // ramp R motor to 25%
+    case STATE_RIGHT25:
+      // 
+      // ***** code here *****
+      //
+      break;
 
-  // ramp all motors down 25%
-  case STATE_ALL25:
-    // 
-    // ***** code here *****
-    //
-    break;
+    // ramp rear motor to 25%
+    case STATE_REAR25:
+      // 
+      // ***** code here *****
+      //
+      break;
 
-  // ramp L motor to 0%
-  case STATE_LEFT0:
-    // 
-    // ***** code here *****
-    //
-    break;
+    // ramp all motors down 25%
+    case STATE_ALL25:
+      // 
+      // ***** code here *****
+      //
+      break;
 
-  // ramp R motor to 0%
-  case STATE_RIGHT0:
-    // 
-    // ***** code here *****
-    //
-    break;
+    // ramp L motor to 0%
+    case STATE_LEFT0:
+      // 
+      // ***** code here *****
+      //
+      break;
 
-  // ramp rear motor to 0%
-  case STATE_REAR0:
-    // 
-    // ***** code here *****
-    //
-    break;
+    // ramp R motor to 0%
+    case STATE_RIGHT0:
+      // 
+      // ***** code here *****
+      //
+      break;
 
-  // return to start state
-  case STATE_START:
-    // 
-    // ***** code here *****
-    //
-    break;
+    // ramp rear motor to 0%
+    case STATE_REAR0:
+      // 
+      // ***** code here *****
+      //
+      break;
+
+    // return to start state
+    case STATE_START:
+      // 
+      // ***** code here *****
+      //
+      break;
+    
+  }
 
 
 }
