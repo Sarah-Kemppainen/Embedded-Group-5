@@ -1,173 +1,139 @@
-int fsm_interval = 50;
+#include <Arduino.h>
 
-const int pmwPin1 = 18; // State BLUE
-const int pmwPin2 = 15; // State BLACK
-const int pmwPin3 = 37; // State RED
+// Motor control pins
+const int pmwPin1 = 18;
+const int pmwPin2 = 15;
+const int pmwPin3 = 37; // New motor pin for the rear motor
 
 #define SWITCH_PIN 31
 
-// NA1 = 13
-// NB1 = 39
-// NA2 = 36 
-// NB2 = 35
+const int fsm_interval = 50; // FSM interval in milliseconds
+const int duty = 64; // Duty cycle for motors (0 - 64 corresponds to 25%)
 
-const int duty = 64; // integer in the range [0, 255]
+float motors_vals[3] = {0,0,0}; // Declare float to store motor values; set as empty
 
 // Set possible states
-// LEFT == BLUE (pmwPin1)
-// RIGHT == RED (pmwPin3)
-// REAR == BLACK (pmwPin2)
-enum {STATE_WAIT, STATE_BLUE25, STATE_RED25, STATE_BLACK25, STATE_ALL25, STATE_BLUE0, STATE_RED0, STATE_BLACK0, STATE_START};
-unsigned char state; 
+enum {STATE_WAIT, STATE_LEFT25, STATE_RIGHT25, STATE_REAR25, STATE_ALL25, STATE_LEFT0, STATE_RIGHT0, STATE_REAR0, STATE_START};
+unsigned char state = STATE_WAIT; // Initialize state to WAIT
 
+// Time tracking
+unsigned long last_time = 0;
 
 void setup() {
+  Serial.begin(9600); // Initialize serial communication for debugging
   pinMode(pmwPin1, OUTPUT);
   pinMode(pmwPin2, OUTPUT);
-  pinMode(pmwPin3; OUTPUT);
-
+  pinMode(pmwPin3, OUTPUT); // Set the third motor pin as output
   pinMode(SWITCH_PIN, INPUT);
-  
 }
 
 void loop() {
-  if (current_time - last_fsm_time > fsm_interval) {
-    fsm_task();
-    last_fsm_time = current_time;
+  // Call the FSM step function at regular intervals
+  unsigned long current_time = millis();
+  if (current_time - last_time > fsm_interval) {
+    Serial.printf("calling fsm_step()........\n");
+    fsm_step();
+    last_time = current_time;
   }
-
-  //analogWrite(pmwPin1, duty);
-
-  Serial.printf("loop");
-
-  fsm_step();
-
 }
 
-
+// Function to bound a value within a specified range
 float bound(float value, float min_value, float max_value) {
-  // return min_value
   if (value < min_value) {
     return min_value;
   }
-
-  // return max_value
   if (value > max_value) {
     return max_value;
   }
-
-  // return value
-  else {
-    return value;
-  }
+  Serial.printf("bound function ran. Returning bounded value.......\n");
+  return value;
 }
 
+// Function to set thrust and direction for a single motor
 void set_motor(int motor, float val) {
-  // check that val is an element of [-64, 64]
-  if ((val >= -64) && (val <= 64)) {
-    // bound value to this range
-    Serial.printf("val %f is out of range [-64, 64]. Calling def bound.", val);
-    
-    bound(val, -64, 64);
-
+  if (val < -64 || val > 64) {
+    Serial.printf("val %f is out of range [-64, 64]. Calling bound.\n", val);
+    val = bound(val, -64, 64);
   }
 
-  // set thrust mag and dir for each motor
-  //
-  // ***** code here *****
-  //
-  //
-
-
+  // Map the thrust value to PWM range (0 to 64)
+  Serial.printf("mapping the thrust value to PWM range (0 to 64).....\n");
+  int pwm_value = (int)map(val, -64, 64, 0, 64);
+  if (motor == 0) {
+    analogWrite(pmwPin1, pwm_value); // Left motor
+  } else if (motor == 1) {
+    analogWrite(pmwPin2, pwm_value); // Right motor
+  } else if (motor == 2) {
+    analogWrite(pmwPin3, pwm_value); // Rear motor
+  }
 }
 
+// Function to set thrust and direction for multiple motors
 void set_motors(float val[3]) {
   const float negative_gain[3] = {1.0, 1.0, 1.0};
 
-  // if val is negative, multiply by the corresponding negative_gain
-  // bound and convert to integer
-  //
-  // ***** code here *****
-  //
-  //
-  
-  set_motor(0, val[0]);
-  set_motor(1, val[1]);
-  set_motor(2, val[2]);
-  
-
+  Serial.printf("set_motors function called. Setting thrust and diraction for all motors.....\n");
+  for (int i = 0; i < 3; ++i) {
+    if (val[i] < 0) {
+      val[i] *= negative_gain[i];
+    }
+    val[i] = bound(val[i], -64, 64);
+    set_motor(i, val[i]);
+  }
 }
 
+// FSM logic implementation
 void fsm_step() {
-  //static State state = STATE_START;
-
   switch (state) {
-
-    // wait for the switch to be pressed
     case STATE_WAIT:
-      // if switch is pressed, change state
-      // 
-      // ***** code here *****
-      //
+      // If switch is pressed, change state to LEFT25
+      if (digitalRead(SWITCH_PIN) == HIGH) {
+        state = STATE_LEFT25;
+      }
       break;
-    
-    // ramp L motor to 25%
+
     case STATE_LEFT25:
-      // 
-      // ***** code here *****
-      //
+      set_motor(0, 64); // Ramp left motor to 25%
+      state = STATE_RIGHT25; // Transition to the next state
       break;
 
-    // ramp R motor to 25%
     case STATE_RIGHT25:
-      // 
-      // ***** code here *****
-      //
+      set_motor(1, 64); // Ramp right motor to 25%
+      state = STATE_REAR25; // Transition to the next state
       break;
 
-    // ramp rear motor to 25%
     case STATE_REAR25:
-      // 
-      // ***** code here *****
-      //
+      set_motor(2, 64); // Ramp rear motor to 25%
+      state = STATE_ALL25; // Transition to the next state
       break;
 
-    // ramp all motors down 25%
     case STATE_ALL25:
-      // 
-      // ***** code here *****
-      //
+      for (int i=0; i<3; i++) {
+        motors_vals[i] = -64;
+      }
+     
+      set_motors(motors_vals); // Ramp all motors down
+      state = STATE_LEFT0; // Transition to the next state
       break;
 
-    // ramp L motor to 0%
     case STATE_LEFT0:
-      // 
-      // ***** code here *****
-      //
+      set_motor(0, 0); // Ramp left motor to 0%
+      state = STATE_RIGHT0; // Transition to the next state
       break;
 
-    // ramp R motor to 0%
     case STATE_RIGHT0:
-      // 
-      // ***** code here *****
-      //
+      set_motor(1, 0); // Ramp right motor to 0%
+      state = STATE_REAR0; // Transition to the next state
       break;
 
-    // ramp rear motor to 0%
     case STATE_REAR0:
-      // 
-      // ***** code here *****
-      //
+      set_motor(2, 0); // Ramp rear motor to 0%
+      state = STATE_START; // Transition to start
       break;
 
-    // return to start state
     case STATE_START:
-      // 
-      // ***** code here *****
-      //
+      // After reaching zero, return to WAIT state
+      state = STATE_WAIT;
       break;
-    
   }
-
-
 }
