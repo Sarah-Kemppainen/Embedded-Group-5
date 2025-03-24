@@ -1,7 +1,8 @@
 int fsm_interval = 50;
 
-const int pmwPin1 = 18; 
-const int pmwPin2 = 15;
+const int pmwPin1 = 18; // State BLUE
+const int pmwPin2 = 15; // State BLACK
+const int pmwPin3 = 37; // State RED
 
 #define SWITCH_PIN 31
 
@@ -9,34 +10,37 @@ const int pmwPin2 = 15;
 // NB1 = 39
 // NA2 = 36 
 // NB2 = 35
-// switch = 31
 
 const int duty = 64; // integer in the range [0, 255]
 
 // Set possible states
-enum {STATE_WAIT, STATE_LEFT25, STATE_RIGHT25, STATE_REAR25, STATE_ALL25, STATE_LEFT0, STATE_RIGHT0, STATE_REAR0, STATE_START};
+// LEFT == BLUE (pmwPin1)
+// RIGHT == RED (pmwPin3)
+// REAR == BLACK (pmwPin2)
+enum {STATE_WAIT, STATE_BLUE25, STATE_RED25, STATE_BLACK25, STATE_ALL25, STATE_BLUE0, STATE_RED0, STATE_BLACK0, STATE_START};
 unsigned char state; 
 
 
 void setup() {
   pinMode(pmwPin1, OUTPUT);
   pinMode(pmwPin2, OUTPUT);
+  pinMode(pmwPin3; OUTPUT);
 
   pinMode(SWITCH_PIN, INPUT);
   
 }
 
 void loop() {
-  //if (current_time - last_fsm_time > fsm_interval) {
-  //  fsm_task();
-  //  last_fsm_time = current_time;
-  //}
+  if (current_time - last_fsm_time > fsm_interval) {
+    fsm_task();
+    last_fsm_time = current_time;
+  }
 
   //analogWrite(pmwPin1, duty);
 
-  fsm_step();
+  Serial.printf("loop");
 
-  // Switch Test
+  fsm_step();
 
 }
 
@@ -105,7 +109,6 @@ void fsm_step() {
       // 
       // ***** code here *****
       //
-
       break;
     
     // ramp L motor to 25%
