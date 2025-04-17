@@ -1,3 +1,7 @@
+//Project6
+//Group5
+//Angel Alcantara, Brandon Aparicio, Diego Perez, Sarah Kemppainen:
+// April, 16, 2025
 // Include necessary libraries for BNO-055
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
@@ -28,7 +32,7 @@ const int NB1 = 14; // BLUE motor
 const int NA2 = 36; // BLACK motor
 const int NB2 = 35; // BLACK motor
 const int NA3 = 8;  // RED motor
-const int NB3 = 7;  // RED motor 
+const int NB3 = 7;  // RED motor
 
 
 // Controller parameters
@@ -41,20 +45,34 @@ enum HovercraftState {
   STATE_FAN_OFF
 };
 
-// Periodic action class implementation (replacing the need for PeriodicAction.h)
+/**
+ * PeriodicAction class - Used to schedule and manage periodic tasks
+ * This replaces the need for PeriodicAction.h
+ */
 class PeriodicAction {
 private:
   unsigned long period;      // Period in milliseconds
   unsigned long lastRunTime; // Time of last run
 
 public:
-  // Constructor
+ 
+   //Constructor for PeriodicAction class
+   // @param periodMs: Time period in milliseconds at which the action should occur
+   // @return None
+   // External Effects: Initializes a new PeriodicAction object
+   
   PeriodicAction(unsigned long periodMs) {
     period = periodMs;
     lastRunTime = 0;
   }
 
-  // Check if it's time to run the action
+  /*
+   * Checks if it's time to run the periodic action
+   *
+   * @param None
+   * @return bool: True if period has elapsed since last run, False otherwise
+   * External Effects: Updates lastRunTime if period has elapsed
+   */
   bool isReady() {
     unsigned long currentTime = millis();
     if (currentTime - lastRunTime >= period) {
@@ -64,7 +82,13 @@ public:
     return false;
   }
 
-  // Reset the timer
+  /*
+   * Resets the timer for the periodic action
+   *
+   * @param None
+   * @return None
+   * External Effects: Updates lastRunTime to current time
+   */
   void reset() {
     lastRunTime = millis();
   }
@@ -84,13 +108,15 @@ PeriodicAction pdTask(10);       // PD control task (10ms)
 PeriodicAction reportTask(1000); // Reporting task (1s)
 PeriodicAction fsmTask(100);     // FSM task (100ms)
 
-// Function to set hovercraft forces
-//
-// @param fx: unit value variable that indicates whether its moving in the x-dir
-//        fy: unit value variable that indicates whether its moving in the y-dir
-//        torque: unit value that indicates whether the hovercraft is rotating
-// @return NONE
-// External Effects: calls set_motors function to turn on side motors
+/*
+ * Sets forces to control hovercraft movement and rotation
+ *
+ * @param fx: Unit value that indicates force in the x-direction
+ * @param fy: Unit value that indicates force in the y-direction
+ * @param torque: Unit value that indicates rotational force
+ * @return None
+ * External Effects: Updates motor values and activates side motors through set_motors function
+ */
 const float R = 5.5;
 void set_hovercraft_forces(float fx, float fy, float torque) {
   // Convert forces to motor commands
@@ -119,14 +145,19 @@ void set_hovercraft_forces(float fx, float fy, float torque) {
   //Serial.printf("passing motors_vals to set_motors: %.2f, %.2f, %.2f\n", motors_vals[0],  motors_vals[1],  motors_vals[2]);
  
   set_motors(motors_vals); // Apply thrust
-  
+ 
   //analogWrite(LEFT_THRUSTER_PIN, leftThrust);
   //analogWrite(RIGHT_THRUSTER_PIN, rightThrust);
   //analogWrite(BACK_THRUSTER_PIN, backThrust);
-
-
 }
 
+/*
+ * Initializes the thruster pins and ensures they start in the off state
+ *
+ * @param None
+ * @return None
+ * External Effects: Configures thruster pins as outputs and sets initial values to 0
+ */
 void setup_thrusters() {
   // Initialize thruster pins
   pinMode(LEFT_THRUSTER_PIN, OUTPUT);
@@ -139,14 +170,15 @@ void setup_thrusters() {
   analogWrite(BACK_THRUSTER_PIN, 0);
 }
 
-//* Function to constrain a value within a specified range.
- //*
- //* @param value: The value to check and bound.
- //* @param min_value: The minimum allowable value.
- //* @param max_value: The maximum allowable value.
- //*
- //* @return: The bounded value, ensuring it stays within [min_value, max_value].
- //* This function serves to protect against out-of-range values.
+/*
+ * Constrains a value within a specified range
+ *
+ * @param value: The value to check and bound
+ * @param min_value: The minimum allowable value
+ * @param max_value: The maximum allowable value
+ * @return float: The bounded value, ensuring it stays within [min_value, max_value]
+ * External Effects: None
+ */
 float bound(float value, float min_value, float max_value) {
   if (value < min_value) {
     return min_value;
@@ -157,14 +189,16 @@ float bound(float value, float min_value, float max_value) {
   return value;
 }
 
-// Function to set thrust and direction for a single motor
- //* Function to set thrust and direction for a single motor.
- //* @param motor: Index of the motor to control (0 = BLUE, 1 = BLACK, 2 = RED).
- //* @param val: The PWM value for controlling the selected motor.
-// *             Positive values drive the motor forward, negative values drive it backward.
- 
- //* External Effects: Modifies the state of the control pins (NA and NB)
- //* for the specified motor, influencing its direction and speed through PWM.
+/*
+ * Sets thrust and direction for a single motor
+ *
+ * @param motor: Index of the motor to control (0 = BLUE/Right, 1 = BLACK/Left, 2 = RED/Back)
+ * @param val: PWM value for controlling the motor (-255 to 255)
+ *             Positive values drive the motor forward, negative values drive it backward
+ * @return None
+ * External Effects: Modifies the state of the control pins (NA and NB)
+ *                  for the specified motor, setting its direction and speed
+ */
 void set_motor(int motor, float val) {
   val = bound(val, -255, 255);  // Using full 8-bit range for more power
  
@@ -216,27 +250,27 @@ void set_motor(int motor, float val) {
   }
 }
 
-// Function to set thrust and direction for multiple motors
-
- //* Function to set thrust and direction for a single motor.
- //* @param motor: Index of the motor to control (0 = BLUE, 1 = BLACK, 2 = RED).
- //* @param val: The PWM value for controlling the selected motor.
-// *             Positive values drive the motor forward, negative values drive it backward.
- 
- //* External Effects: Modifies the state of the control pins (NA and NB)
- //* for the specified motor, influencing its direction and speed through PWM.
+/*
+ * Sets thrust and direction for all three motors simultaneously
+ *
+ * @param val: Array of three PWM values (-255 to 255) for controlling each motor
+ * @return None
+ * External Effects: Calls set_motor for each of the three motors
+ */
 void set_motors(float val[3]) {
   for (int i = 0; i < 3; ++i) {
     set_motor(i, val[i]);
   }
 }
 
-// Function to set up the fan with a low throttle
-//
-// @param NONE
-// @return NONE
-// External Effects: Ensures that the fan is set up on a low
-// throttle so that it properly turns on when called.
+/*
+ * Sets up the central fan with a low initial throttle value
+ *
+ * @param None
+ * @return None
+ * External Effects: Attaches the fan to the specified pin and
+ *                  sets it to a low throttle value for proper initialization
+ */
 void fan_setup() {
     fan.attach(CENTRAL_FAN_PIN); // attaches the fan to specified Arduino pin
     delay(100);
@@ -245,7 +279,13 @@ void fan_setup() {
     delay(3000);
 }
 
-// New functions for this project
+
+ // Main setup function that initializes all components of the hovercraft
+ // @param None
+ // @return None
+ // External Effects: Initializes serial communication, sets pin modes,
+ //                  configures initial motor states, sets up fan and BNO-055 sensor
+ 
 void setup() {
   Serial.begin(115200);             // FIXME 9600 (?)
   while (!Serial) delay(10);
@@ -281,43 +321,9 @@ void setup() {
   analogWrite(BACK_THRUSTER_PIN, 0);
  
   // Setup central fan
-  //pinMode(CENTRAL_FAN_PIN, OUTPUT);
-  //digitalWrite(CENTRAL_FAN_PIN, LOW);
   fan_setup();
   Serial.println("Central fan initialized");
 
-  // Central fan test
-  /*
-  fan.write(60);
-  delay(2000);
-  fan.write(0);
-  Serial.println("Central fan tested");
-  */
-
-  // Side motors test
-  /*
-  Serial.println("Testing motors...");
-  // Left motor
-  set_motor(0, 500);
-  delay(250);
-  set_motor(0, 0);
- 
-  // Right motor
-  set_motor(1, 500);
-  delay(250);
-  set_motor(1, 0);
- 
-  // Rear motor
-  set_motor(2, 500);
-  delay(250);
-  set_motor(2, 0);
-  
- 
-  Serial.println("Testing completed.");
-  */
-
-
- 
   // Setup thrusters (from Project 6)
   setup_thrusters();
  
@@ -338,6 +344,13 @@ void setup() {
   Serial.println("System initialized. Press switch to start.");
 }
 
+/*
+ * Main loop function that schedules and executes periodic tasks
+ *
+ * @param None
+ * @return None
+ * External Effects: Calls task functions when their respective periods have elapsed
+ */
 void loop() {
   // Check if it's time to run tasks
   if (imuTask.isReady()) imu_step();
@@ -346,6 +359,13 @@ void loop() {
   if (fsmTask.isReady()) fsm_step();
 }
 
+/*
+ * Updates BNO-055 IMU sensor data
+ *
+ * @param None
+ * @return None
+ * External Effects: Reads fresh data from the BNO-055 sensor
+ */
 void imu_step() {
   // Update BNO-055 data
   sensors_event_t event;
@@ -354,6 +374,14 @@ void imu_step() {
   // calls in other functions will fetch the specific data we need
 }
 
+/*
+ * Implements the proportional-derivative control step to stabilize the hovercraft
+ *
+ * @param None
+ * @return None
+ * External Effects: Reads gyroscope data from BNO-055 and applies
+ *                  torque correction through the set_hovercraft_forces function
+ */
 void pd_step() {
   float fx = 0.0;
   float fy = 0.0;
@@ -362,14 +390,20 @@ void pd_step() {
   imu::Vector<3> gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
   float torque = Kd * gyro.z();
 
-  Serial.printf("torque: %.2f\n", fx, fy, torque);
+  //Serial.printf("torque: %.2f\n", torque);
  
   set_hovercraft_forces(fx, fy, torque);
 }
 
+/*
+ * Reports system status data through serial communication
+ *
+ * @param None
+ * @return None
+ * External Effects: May print sensor data to Serial when uncommented
+ */
 void report_step() {
   // Get orientation and rotation data for reporting
-  /*
   imu::Vector<3> gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
   imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
  
@@ -381,9 +415,16 @@ void report_step() {
   Serial.print(euler.y());
   Serial.print(" Roll=");
   Serial.println(euler.z());
-  */
 }
 
+/*
+ * Implements the finite state machine that controls the hovercraft operation sequence
+ *
+ * @param None
+ * @return None
+ * External Effects: Reads switch state, changes currentState variable, and
+ *                  turns the central fan on or off based on state transitions
+ */
 void fsm_step() {
   // Read switch state (active low with pull-up)
   bool switchPressed = (digitalRead(SWITCH_PIN) == LOW);
@@ -393,8 +434,7 @@ void fsm_step() {
     case STATE_WAITING:
       if (switchPressed) {
         // Switch pressed, turn on fan and transition to FAN_ON state
-        //digitalWrite(CENTRAL_FAN_PIN, HIGH);
-        fan.write(CENTRAL_FAN_DUTY);                                                   
+        fan.write(CENTRAL_FAN_DUTY);                                                  
         stateStartTime = currentTime;
         currentState = STATE_FAN_ON;
         Serial.println("Fan turned ON");
@@ -404,7 +444,6 @@ void fsm_step() {
     case STATE_FAN_ON:
       if (currentTime - stateStartTime >= FAN_RUN_TIME) {
         // 30 seconds elapsed, turn off fan and transition to FAN_OFF state
-        //digitalWrite(CENTRAL_FAN_PIN, LOW);
         fan.write(0);
         currentState = STATE_FAN_OFF;
         Serial.println("Fan turned OFF");
@@ -418,3 +457,4 @@ void fsm_step() {
       break;
   }
 }
+
