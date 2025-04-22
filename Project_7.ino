@@ -539,31 +539,6 @@ float db_clip(float error, float deadband, float saturation) {
 }
 
 /**
- * Checks the calibration status of the BNO055 sensor
- * @return true if the sensor is sufficiently calibrated
- */
-bool check_calibration() {
-  uint8_t system = 0, gyro = 0, accel = 0, mag = 0;
- 
-  // Get calibration values
-  bno.getCalibration(&system, &gyro, &accel, &mag);
- 
-  // Print calibration status
-  Serial.print("Calibration: Sys=");
-  Serial.print(system);
-  Serial.print(" Gyro=");
-  Serial.print(gyro);
-  Serial.print(" Accel=");
-  Serial.print(accel);
-  Serial.print(" Mag=");
-  Serial.println(mag);
- 
-  // Consider calibrated if magnetometer is at least level 2 (out of 3)
-  // and system calibration is at least level 2
-  return (system >= 2 && mag >= 2);
-}
-
-/**
  * Gets the current heading from the BNO055 sensor
  * @return heading in degrees (-180 to 180)
  */
