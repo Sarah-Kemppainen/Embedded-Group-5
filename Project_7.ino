@@ -352,6 +352,7 @@ void setup() {
 
   // Run tests
   run_tests_proj7();    // runs tests for compute_error, db_clip, pd_step() 
+  Serial.println("All project 7 functions: PASSED");
  
   Serial.println("System initialized. Press switch to start.");
 }
@@ -367,7 +368,7 @@ void loop() {
   // Check if it's time to run tasks
   if (imuTask.isReady()) imu_step();
   if (pdTask.isReady()) pd_step();
-  //if (reportTask.isReady()) report_step();    // Function prints pitch roll and yaw
+  if (reportTask.isReady()) report_step();    // Function prints pitch roll and yaw
   if (fsmTask.isReady()) fsm_step();
 }
 
@@ -580,6 +581,8 @@ void run_tests_proj7() {
   assert(compute_error(-90.0, 78.0) == 168.0);    // returns a 168.0 deg CCW (168.0) error from 78.0 heading
   assert(compute_error(-180.0, 78.0) == -102.0);  // returns a 102.0 deg CW (-102.0) error from 78.0 heading
 
+  Serial.println("compute_error function tests: PASSED");
+
   // db_clip() tests
   // For an error that is +/- deadband, this function returns a zero.
   assert(db_clip(5, 5, 90) == 0.0);   // edge of deadband
@@ -594,7 +597,7 @@ void run_tests_proj7() {
   assert(db_clip(45, 5, 90) == 40);
   assert(db_clip(-45, 5, 90) == -40);
     
-  Serial.println("compute_error function tests\t...........................\tpassed");
+  Serial.println("db_clip function tests: PASSED");
 
 }
 
