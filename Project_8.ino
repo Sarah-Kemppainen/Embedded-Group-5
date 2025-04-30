@@ -87,7 +87,7 @@ unsigned long last_imu_time = 0;
 
 // Define duty parameters
 #define CENTRAL_FAN_DUTY 100    // FIXME: 100
-#define SIDE_MOTOR_DUTY 100    // FIXME: Old 100 (likely will be lower)
+#define SIDE_MOTOR_DUTY 75    // FIXME: Old 100 (likely will be lower)
 
 //float motors_vals[3] = {0,0,0};
 
